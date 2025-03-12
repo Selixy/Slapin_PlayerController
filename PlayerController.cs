@@ -79,6 +79,7 @@ namespace Slapin_CharacterController
 
             // Update
             physic.Update();
+            input.Update();
         }
     }
 }
