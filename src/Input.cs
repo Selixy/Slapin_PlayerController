@@ -15,32 +15,38 @@ namespace Slapin_CharacterController
         private InputAction look;
         private InputAction mouseDelta;
 
+        // Locks
+        private bool jumpLock = false;
+        private bool sprintLock = false;
+        private bool dashLock = false;
+        private bool atkLock = false;
 
         // Propriétés en lecture seule pour connaître l'état actuel des entrées
         public bool IsGamepadMode { get; private set; } = false;
+
         // États des entrées
         public BInput CurrentJumpState { get; private set; } = BInput.Released;
         public BInput CurrentSprintState { get; private set; } = BInput.Released;
         public BInput CurrentDashState { get; private set; } = BInput.Released;
         public BInput CurrentAtkState { get; private set; } = BInput.Released;
         public Vector2 CurrentMoveState { get; private set; } = Vector2.zero;
-        public Vector2 CurrentLookState {
-            get {
-                if (IsGamepadMode) {
-                    return JoystickLookState;
-                } else {
-                    return MouseLookState;
-                }
+        public Vector2 CurrentLookState
+        {
+            get
+            {
+                return IsGamepadMode ? JoystickLookState : MouseLookState;
             }
         }
 
-        // references
+        // Références
         private MonoBehaviour coroutineOwner;
         private GameObject Player;
 
         // Position du joueur
-        private Vector2 PlayerPosition {
-            get {
+        private Vector2 PlayerPosition
+        {
+            get
+            {
                 Vector3 pos = Player.transform.position;
                 return new Vector2(pos.x, pos.y);
             }
@@ -48,18 +54,18 @@ namespace Slapin_CharacterController
 
         // Look state
         private Vector2 JoystickLookState = Vector2.zero;
-        private Vector2 MouseLookState {
-            get {
+        private Vector2 MouseLookState
+        {
+            get
+            {
                 // Conversion de la position de la souris en coordonnées monde
                 Vector3 mouseWorldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 // Calcul du vecteur de regard
                 Vector2 lookVector = PlayerPosition - new Vector2(mouseWorldPosition.x, mouseWorldPosition.y);
-                // Normalisation du vecteur de regard
                 lookVector.Normalize();
                 return lookVector;
             }
         }
-
 
         // Constructeur
         public S_Input(MonoBehaviour owner, GameObject Player)
@@ -111,10 +117,9 @@ namespace Slapin_CharacterController
             this.mouseDelta.started += OnMouseDeltaStarted;
         }
 
-        // Destructor
+        // Destructeur : Désabonnement des événements
         ~S_Input()
         {
-            // Désabonnement des événements
             // Jump
             this.jump.started  -= OnJumpStarted;
             this.jump.performed -= OnJumpPerformed;
@@ -146,20 +151,30 @@ namespace Slapin_CharacterController
             this.mouseDelta.started -= OnMouseDeltaStarted;
         }
 
+        /////////////////
+        //    JUMP     //
+        /////////////////
 
-        // Jump
         // Méthode appelée lorsque le bouton de saut est initialement pressé
         private void OnJumpStarted(InputAction.CallbackContext context)
         {
-            CurrentJumpState = BInput.Down;
-            Debug.Log("Jump started: " + CurrentJumpState);
+            if (!jumpLock)
+            {
+                CurrentJumpState = BInput.Down;
+                jumpLock = true; // Active le verrou pour bloquer la transition
+                Debug.Log("Jump started: " + CurrentJumpState);
+                coroutineOwner.StartCoroutine(ReleaseJumpLock());
+            }
         }
 
         // Méthode appelée lorsque le bouton de saut est maintenu
         private void OnJumpPerformed(InputAction.CallbackContext context)
         {
-            CurrentJumpState = BInput.Pressed;
-            Debug.Log("Jump performed: " + CurrentJumpState);
+            if (!jumpLock)
+            {
+                CurrentJumpState = BInput.Pressed;
+                Debug.Log("Jump performed: " + CurrentJumpState);
+            }
         }
 
         // Méthode appelée lorsque le bouton de saut est relâché
@@ -167,8 +182,14 @@ namespace Slapin_CharacterController
         {
             CurrentJumpState = BInput.Up;
             Debug.Log("Jump canceled: " + CurrentJumpState);
-            // Démarrer la coroutine pour réinitialiser l'état la frame suivante
             coroutineOwner.StartCoroutine(ResetJumpImputCoroutine());
+        }
+
+        // Coroutine pour libérer le verrou après une frame
+        private IEnumerator ReleaseJumpLock()
+        {
+            yield return null;
+            jumpLock = false;
         }
 
         // Coroutine qui réinitialise l'état de saut après une frame
@@ -179,21 +200,30 @@ namespace Slapin_CharacterController
             Debug.Log("Jump state reset to Released");
         }
 
+        //////////////////
+        //    SPRINT    //
+        //////////////////
 
-
-        // Sprint
         // Méthode appelée lorsque le bouton de sprint est initialement pressé
         private void OnSprintStarted(InputAction.CallbackContext context)
         {
-            CurrentSprintState = BInput.Down;
-            Debug.Log("Sprint started: " + CurrentSprintState);
+            if (!sprintLock)
+            {
+                CurrentSprintState = BInput.Down;
+                sprintLock = true;
+                Debug.Log("Sprint started: " + CurrentSprintState);
+                coroutineOwner.StartCoroutine(ReleaseSprintLock());
+            }
         }
 
         // Méthode appelée lorsque le bouton de sprint est maintenu
         private void OnSprintPerformed(InputAction.CallbackContext context)
         {
-            CurrentSprintState = BInput.Pressed;
-            Debug.Log("Sprint performed: " + CurrentSprintState);
+            if (!sprintLock)
+            {
+                CurrentSprintState = BInput.Pressed;
+                Debug.Log("Sprint performed: " + CurrentSprintState);
+            }
         }
 
         // Méthode appelée lorsque le bouton de sprint est relâché
@@ -201,8 +231,14 @@ namespace Slapin_CharacterController
         {
             CurrentSprintState = BInput.Up;
             Debug.Log("Sprint canceled: " + CurrentSprintState);
-            // Démarrer la coroutine pour réinitialiser l'état la frame suivante
             coroutineOwner.StartCoroutine(ResetSprintImputCoroutine());
+        }
+
+        // Coroutine pour libérer le verrou après une frame
+        private IEnumerator ReleaseSprintLock()
+        {
+            yield return null;
+            sprintLock = false;
         }
 
         // Coroutine qui réinitialise l'état de sprint après une frame
@@ -213,21 +249,30 @@ namespace Slapin_CharacterController
             Debug.Log("Sprint state reset to Released");
         }
 
+        /////////////////
+        //    DASH     //
+        /////////////////
 
-
-        // Dash
         // Méthode appelée lorsque le bouton de dash est initialement pressé
         private void OnDashStarted(InputAction.CallbackContext context)
         {
-            CurrentDashState = BInput.Down;
-            Debug.Log("Dash started: " + CurrentDashState);
+            if (!dashLock)
+            {
+                CurrentDashState = BInput.Down;
+                dashLock = true;
+                Debug.Log("Dash started: " + CurrentDashState);
+                coroutineOwner.StartCoroutine(ReleaseDashLock());
+            }
         }
 
         // Méthode appelée lorsque le bouton de dash est maintenu
         private void OnDashPerformed(InputAction.CallbackContext context)
         {
-            CurrentDashState = BInput.Pressed;
-            Debug.Log("Dash performed: " + CurrentDashState);
+            if (!dashLock)
+            {
+                CurrentDashState = BInput.Pressed;
+                Debug.Log("Dash performed: " + CurrentDashState);
+            }
         }
 
         // Méthode appelée lorsque le bouton de dash est relâché
@@ -235,8 +280,14 @@ namespace Slapin_CharacterController
         {
             CurrentDashState = BInput.Up;
             Debug.Log("Dash canceled: " + CurrentDashState);
-            // Démarrer la coroutine pour réinitialiser l'état la frame suivante
             coroutineOwner.StartCoroutine(ResetDashImputCoroutine());
+        }
+
+        // Coroutine pour libérer le verrou après une frame
+        private IEnumerator ReleaseDashLock()
+        {
+            yield return null;
+            dashLock = false;
         }
 
         // Coroutine qui réinitialise l'état de dash après une frame
@@ -247,19 +298,30 @@ namespace Slapin_CharacterController
             Debug.Log("Dash state reset to Released");
         }
 
-        // Atk
+        /////////////////
+        //     ATK     //
+        /////////////////
+
         // Méthode appelée lorsque le bouton d'attaque est initialement pressé
         private void OnAtkStarted(InputAction.CallbackContext context)
         {
-            CurrentAtkState = BInput.Down;
-            Debug.Log("Atk started: " + CurrentAtkState);
+            if (!atkLock)
+            {
+                CurrentAtkState = BInput.Down;
+                atkLock = true;
+                Debug.Log("Atk started: " + CurrentAtkState);
+                coroutineOwner.StartCoroutine(ReleaseAtkLock());
+            }
         }
 
         // Méthode appelée lorsque le bouton d'attaque est maintenu
         private void OnAtkPerformed(InputAction.CallbackContext context)
         {
-            CurrentAtkState = BInput.Pressed;
-            Debug.Log("Atk performed: " + CurrentAtkState);
+            if (!atkLock)
+            {
+                CurrentAtkState = BInput.Pressed;
+                Debug.Log("Atk performed: " + CurrentAtkState);
+            }
         }
 
         // Méthode appelée lorsque le bouton d'attaque est relâché
@@ -267,8 +329,14 @@ namespace Slapin_CharacterController
         {
             CurrentAtkState = BInput.Up;
             Debug.Log("Atk canceled: " + CurrentAtkState);
-            // Démarrer la coroutine pour réinitialiser l'état la frame suivante
             coroutineOwner.StartCoroutine(ResetAtkImputCoroutine());
+        }
+
+        // Coroutine pour libérer le verrou après une frame
+        private IEnumerator ReleaseAtkLock()
+        {
+            yield return null;
+            atkLock = false;
         }
 
         // Coroutine qui réinitialise l'état d'attaque après une frame
@@ -279,10 +347,11 @@ namespace Slapin_CharacterController
             Debug.Log("Atk state reset to Released");
         }
 
+        //////////////////
+        //     MOVE     //
+        //////////////////
 
-
-        // Move
-        // Méthode appelée lorsque le déplacement est effectué
+        // Méthode appelée lors du déplacement
         private void OnMovePerformed(InputAction.CallbackContext context)
         {
             CurrentMoveState = context.ReadValue<Vector2>();
@@ -296,34 +365,40 @@ namespace Slapin_CharacterController
             Debug.Log("Move canceled: " + CurrentMoveState);
         }
 
+        //////////////////
+        //     LOOK     //
+        //////////////////
 
-        // Look
-        // Méthode appelée lorsque le déplacement du joystick (R) est initialement pressé
+        // Méthode appelée lorsque le joystick de regard est initialement pressé
         private void OnLookStarted(InputAction.CallbackContext context)
         {
             IsGamepadMode = true;
             Debug.Log("Look started: Gamepad mode activated");
         }
 
-        // Méthode appelée lorsque le déplacement du joystick (R) est effectué
+        // Méthode appelée lors du déplacement du joystick de regard
         private void OnLookPerformed(InputAction.CallbackContext context)
         {
             JoystickLookState = context.ReadValue<Vector2>();
             Debug.Log("Look performed: " + JoystickLookState);
         }
 
-        // Méthode appelée lorsque le déplacement du joystick (R) est annulé (relâché)
+        // Méthode appelée lorsque le joystick de regard est relâché
         private void OnLookCanceled(InputAction.CallbackContext context)
         {
             JoystickLookState = Vector2.zero;
             Debug.Log("Look canceled: " + JoystickLookState);
         }
 
-        // MouseDelta
+        //////////////////////
+        //   MOUSE DELTA    //
+        //////////////////////
+
         // Méthode appelée lorsque la souris commence à se déplacer
         private void OnMouseDeltaStarted(InputAction.CallbackContext context)
         {
-            if (IsGamepadMode) {
+            if (IsGamepadMode)
+            {
                 IsGamepadMode = false;
                 Debug.Log("MouseDelta started: Mouse mode activated");
             }
