@@ -5,6 +5,7 @@ namespace Slapin_CharacterController
 {
     public class Walk
     {
+        // Variables
         private Physic physic;
         private S_Input input;
         private float sprintAcceleration;
@@ -12,6 +13,15 @@ namespace Slapin_CharacterController
         private float walkAcceleration;
         private float walkMaxSpeed;
 
+        // Variables Statiques
+        private static float inertiaGroundFactor = 1f;
+        private static float inertiaAirFactor = 0.5f;
+        private static float airAdherence = 0.1f;
+
+        // Variables accessibles
+        public float WallJumpFactor = 1f;
+
+        // Constructeur
         public Walk(Physic physic,
                     S_Input input,
                     // Constants
@@ -30,36 +40,82 @@ namespace Slapin_CharacterController
             this.walkMaxSpeed = walkMaxSpeed;
         }
 
+        // Update
         public void Update()
         {
-            if (input.CurrentMoveState != Vector2.zero)
-            {
-                if (input.CurrentSprintState == BInput.Pressed)
-                {
+            if (input.CurrentMoveState != Vector2.zero) {
+                if (input.CurrentSprintState == BInput.Pressed) {
                     Run(input.CurrentMoveState, sprintAcceleration, sprintMaxSpeed);
                 }
-                else
-                {
+                else {
                     Run(input.CurrentMoveState, walkAcceleration, walkMaxSpeed);
                 }
             }
         }
 
-        private void Run(Vector2 directionAxis, float acceleration, float maxSpeed)
+        // Fonction qui retourne l'adhérence en fonction de l'état du joueur
+        private float GetAderence()
         {
-            float directionAmplitude = directionAxis.magnitude;
-            if (directionAmplitude == 0)
+            // Si le joueur est sur le sol, on calcule l'adhérence
+            if (physic.state == Physics.State.OnGround) {
+                float Aderence = 0f;
+                foreach (Physics.CollisionData collision in physic.collisionBuffer.CollisionList) {
+                    if (collision.Normal.y > 0) {
+                        Aderence += collision.Adherence;
+                    }
+                }
+                return Aderence;
+            } else {
+                return airAdherence;
+            }
+        }
+
+        // Fonction qui calcule la vitesse
+        private void Run(Vector2 vectorAxis, float acceleration, float maxSpeed)
+        {
+            // Si le joueur ne bouge pas ou si la vitesse est supérieure à la vitesse maximale, on ne fait rien
+            if (vectorAxis.x == 0 ||
+                (Mathf.Abs(physic.velocity.x) > maxSpeed &&
+                Mathf.Sign(physic.velocity.x) == Mathf.Sign(vectorAxis.x) &&
+                physic.velocity.x != 0))
             {
                 return;
             }
-            float direction = Mathf.Sign(directionAxis.x);
 
-            if (Mathf.Abs(physic.velocity.x) <= maxSpeed || Mathf.Sign(physic.velocity.x) != direction)
-            {
-                float velocity = direction * acceleration * directionAmplitude;
-                velocity = Mathf.Clamp(velocity, -maxSpeed, maxSpeed);
-                physic.AddVelocity(new Vector2(velocity, 0));
+            // On initialise la vitesse, la direction et son amplitude
+            float directionAmplitude = vectorAxis.magnitude * WallJumpFactor;
+            float direction = Mathf.Sign(vectorAxis.x);
+
+            // On calcule l'accélération en fonction de l'état du joueur
+            if (physic.state == Physics.State.OnGround) {
+                if (Mathf.Sign(physic.velocity.x) != direction) {
+                    acceleration *= inertiaGroundFactor * GetAderence();
+                } else {
+                    acceleration *= GetAderence();
+                }
+            } else {
+                if (Mathf.Sign(physic.velocity.x) != direction) {
+                    acceleration *= inertiaAirFactor * GetAderence();
+                } else {
+                    acceleration *= GetAderence();
+                }
             }
+
+            // Calcul de l'accélération à ajouter en fonction de la direction et de l'accélération
+            float addVelocity = direction * acceleration * directionAmplitude;
+
+            // On calcule la nouvelle vitesse potentielle
+            float currentVelocity = physic.velocity.x;
+            float newVelocity = currentVelocity + addVelocity;
+
+            // Si la nouvelle vitesse dépasse la vitesse maximale, on la plafonne
+            if (Mathf.Abs(newVelocity) > maxSpeed) {
+                newVelocity = maxSpeed * Mathf.Sign(newVelocity);
+                addVelocity = newVelocity - currentVelocity;
+            }
+
+            // On applique la vitesse calculée
+            physic.AddVelocity(new Vector2(addVelocity, 0));
         }
     }
 }
