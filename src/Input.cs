@@ -134,60 +134,51 @@ namespace Slapin_CharacterController
             this.mouseDelta.started -= OnMouseDeltaStarted;
         }
 
-        /////////////////////////
-        //      GESTION DES    //
-        //       INPUTS        //
-        /////////////////////////
+
+
+        // --------------INPUTS CALLBACKS--------------
 
         // --- JUMP ---
         private void OnJumpStarted(InputAction.CallbackContext context)
         {
             CurrentJumpState = BInput.Down;
-            Debug.Log("Jump started: " + CurrentJumpState);
         }
 
         private void OnJumpCanceled(InputAction.CallbackContext context)
         {
             CurrentJumpState = BInput.Up;
-            Debug.Log("Jump canceled: " + CurrentJumpState);
         }
 
         // --- SPRINT ---
         private void OnSprintStarted(InputAction.CallbackContext context)
         {
             CurrentSprintState = BInput.Down;
-            Debug.Log("Sprint started: " + CurrentSprintState);
         }
 
         private void OnSprintCanceled(InputAction.CallbackContext context)
         {
             CurrentSprintState = BInput.Up;
-            Debug.Log("Sprint canceled: " + CurrentSprintState);
         }
 
         // --- DASH ---
         private void OnDashStarted(InputAction.CallbackContext context)
         {
             CurrentDashState = BInput.Down;
-            Debug.Log("Dash started: " + CurrentDashState);
         }
 
         private void OnDashCanceled(InputAction.CallbackContext context)
         {
             CurrentDashState = BInput.Up;
-            Debug.Log("Dash canceled: " + CurrentDashState);
         }
 
         // --- ATK ---
         private void OnAtkStarted(InputAction.CallbackContext context)
         {
             CurrentAtkState = BInput.Down;
-            Debug.Log("Atk started: " + CurrentAtkState);
         }
         private void OnAtkCanceled(InputAction.CallbackContext context)
         {
             CurrentAtkState = BInput.Up;
-            Debug.Log("Atk canceled: " + CurrentAtkState);
         }
 
 
@@ -195,29 +186,24 @@ namespace Slapin_CharacterController
         private void OnMovePerformed(InputAction.CallbackContext context)
         {
             CurrentMoveState = context.ReadValue<Vector2>();
-            Debug.Log("Move performed: " + CurrentMoveState);
         }
         private void OnMoveCanceled(InputAction.CallbackContext context)
         {
             CurrentMoveState = Vector2.zero;
-            Debug.Log("Move canceled: " + CurrentMoveState);
         }
 
         // --- LOOK ---
         private void OnLookStarted(InputAction.CallbackContext context)
         {
             IsGamepadMode = true;
-            Debug.Log("Look started: Gamepad mode activated");
         }
         private void OnLookPerformed(InputAction.CallbackContext context)
         {
             JoystickLookState = context.ReadValue<Vector2>();
-            Debug.Log("Look performed: " + JoystickLookState);
         }
         private void OnLookCanceled(InputAction.CallbackContext context)
         {
             JoystickLookState = Vector2.zero;
-            Debug.Log("Look canceled: " + JoystickLookState);
         }
 
         // --- MOUSE DELTA ---
@@ -226,10 +212,12 @@ namespace Slapin_CharacterController
             if (IsGamepadMode)
             {
                 IsGamepadMode = false;
-                Debug.Log("MouseDelta started: Mouse mode activated");
             }
         }
 
+
+
+        // --------------INPUTS UPDATE--------------
 
         // Méthode Update pour mettre à jour les états des boutons
         public void Update()
@@ -248,6 +236,7 @@ namespace Slapin_CharacterController
             if (CurrentAtkState == BInput.Up) {
                 CurrentAtkState = BInput.Released;
             }
+
 
             if (CurrentJumpState == BInput.Down) {
                 CurrentJumpState = BInput.Pressed;

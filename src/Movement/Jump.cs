@@ -1,3 +1,4 @@
+using UnityEngine;
 using Physics;
 
 namespace Slapin_CharacterController
@@ -42,7 +43,13 @@ namespace Slapin_CharacterController
 
         public void Update()
         {
-            
+
+            if (input.CurrentJumpState == BInput.Down)
+            {
+                if (physic.state == Physics.State.OnGround) {
+                    physic.AddVelocity(new Vector2(0, jumpForce));
+                }
+            }
         }
 
     }

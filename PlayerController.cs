@@ -13,17 +13,17 @@ namespace Slapin_CharacterController
         private Dash dash;
 
         [Header("Movement Settings")]
-        [SerializeField] private float walkAcceleration = 10f;
-        [SerializeField] private float walkMaxSpeed = 5f;
-        [SerializeField] private float sprintAcceleration = 20f;
-        [SerializeField] private float sprintMaxSpeed = 10f;
+        [SerializeField] private float walkAcceleration = 3f;
+        [SerializeField] private float walkMaxSpeed = 4f;
+        [SerializeField] private float sprintAcceleration = 4f;
+        [SerializeField] private float sprintMaxSpeed = 8f;
 
         [Header("Jump Settings")]
-        [SerializeField] private float jumpForce = 10f;
-        [SerializeField] private float airJumpForce = 5f;
+        [SerializeField] private float jumpForce = 20f;
+        [SerializeField] private float airJumpForce = 15f;
         [SerializeField] private float airJumpDelay = 0.5f;
-        [SerializeField] private float airJumpMax = 2f;
-        [SerializeField] private float wallJumpForce = 10f;
+        [SerializeField] private float airJumpMax = 1f;
+        [SerializeField] private float wallJumpForce = 15f;
         [SerializeField] private float wallJumpDuration = 0.5f;
 
         [Header("Dash Settings")]
@@ -42,6 +42,7 @@ namespace Slapin_CharacterController
             // instances de mouvement
             walk = new Walk(physic,
                             input,
+
                             walkAcceleration,
                             walkMaxSpeed,
                             sprintAcceleration,
