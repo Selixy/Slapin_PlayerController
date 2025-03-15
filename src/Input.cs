@@ -51,7 +51,7 @@ namespace Slapin_CharacterController
             get
             {
                 Vector3 mouseWorldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                Vector2 lookVector = PlayerPosition - new Vector2(mouseWorldPosition.x, mouseWorldPosition.y);
+                Vector2 lookVector = new Vector2(mouseWorldPosition.x, mouseWorldPosition.y) - PlayerPosition;
                 lookVector.Normalize();
                 return lookVector;
             }
