@@ -13,14 +13,14 @@ namespace Slapin_CharacterController
         private float jumpForce;
         private float airJumpForce;
         private float airJumpDelay;
-        private int airJumpMax;
+        private int   airJumpMax;
         private float wallJumpForce;
         private float wallJumpDuration;
         private float wallUpFactor;
-        private bool stayJump;
+        private bool  stayJump;
 
         private int airJumpCount;
-
+        private bool IsJumping = false;
         //constructor
         public Jump(Physic physic, 
                     S_Input input, 
@@ -31,11 +31,11 @@ namespace Slapin_CharacterController
                     float jumpForce, 
                     float airJumpForce, 
                     float airJumpDelay, 
-                    int airJumpMax, 
+                    int   airJumpMax, 
                     float wallJumpForce, 
                     float wallJumpDuration,
                     float wallUpFactor,
-                    bool stayJump)
+                    bool  stayJump)
         {
             this.physic = physic;
             this.input = input;
@@ -72,12 +72,24 @@ namespace Slapin_CharacterController
                 if (physic.state == Physics.State.OnGround) {
                     JumpOnGround();
                 }
+            } else if (input.CurrentJumpState == BInput.Up) {
+                StopJump();
             }
         }
 
         private void JumpOnGround()
         {
+            IsJumping = true;
             physic.SetVerticalVelocity(jumpForce);
+        }
+
+        private void StopJump()
+        {
+            float velocity = physic.velocity.y;
+            if (velocity > 0f && IsJumping) {
+                physic.SetVerticalVelocity(velocity * 0.5f);
+                IsJumping = false;
+            }
         }
 
         private void JumpInAir()
@@ -125,11 +137,14 @@ namespace Slapin_CharacterController
 
         public void ResetWallJumpFactor()
         {
-            if (walk.WallJumpFactor < 1f) {
-                walk.WallJumpFactor += Time.deltaTime / wallJumpDuration;
-                walk.WallJumpFactor = Mathf.Clamp(walk.WallJumpFactor, 0f, 1f);
+            if (walk.WallJumpFactor != 1f) {
+                if (physic.state == Physics.State.OnGround || physic.state == Physics.State.OnWall && walk.WallJumpFactor > 0.5f) {
+                    walk.WallJumpFactor = 1f;
+                } else {
+                    walk.WallJumpFactor += Time.deltaTime / wallJumpDuration;
+                    walk.WallJumpFactor = Mathf.Clamp(walk.WallJumpFactor, 0f, 1f);
+                }
             }
         }
-
     }
 }
