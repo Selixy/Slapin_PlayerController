@@ -4,7 +4,7 @@ using Physics;
 
 namespace Slapin_CharacterController
 {
-    public class CharacterController : MonoBehaviour
+    public class Sl_CharacterController : MonoBehaviour
     {
         private S_Input input;
         private Physic physic;
@@ -26,19 +26,21 @@ namespace Slapin_CharacterController
         [SerializeField] private int   airJumpMax = 1;
         [SerializeField] private float wallJumpForce = 30f;
         [SerializeField] private float wallUpFactor = 0.65f;
-        [SerializeField] private float wallJumpDuration = 0.5f;
+        [SerializeField] private float wallJumpDuration = 0.8f;
 
         [Header("Dash Settings")]
-        [SerializeField] private float dashSpeed = 10f;
-        [SerializeField] private float dashDistance = 10f;
-
+        [SerializeField] private float dashDuration = 10f;
+        [SerializeField] private float dashChargeTimeMin = 0.1f;
+        [SerializeField] private float dashChargeTimeMax = 0.4f;
+        [SerializeField] private float dashDistanceMin = 10f;
+        [SerializeField] private float dashDistanceMax = 20f;
 
 
         private void Awake()
         {
             // Création des instances
             // instances de base
-            physic = new Physic(gameObject);
+            physic = new Physic(gameObject, 0.0001f);
             input = new S_Input(this, gameObject);
 
             // instances de mouvement
@@ -68,8 +70,11 @@ namespace Slapin_CharacterController
             // instances de dash
             dash = new Dash(physic,
                             input,
-                            dashSpeed,
-                            dashDistance);
+                            dashDuration,
+                            dashChargeTimeMin,
+                            dashChargeTimeMax,
+                            dashDistanceMin,
+                            dashDistanceMax);
         }
 
         void Start()
