@@ -34,7 +34,8 @@ namespace Slapin_CharacterController
         [SerializeField] private float dashChargeTimeMax = 0.4f;
         [SerializeField] private float dashDistanceMin = 10f;
         [SerializeField] private float dashDistanceMax = 20f;
-
+        [SerializeField] private float dashCurveExponent = 7f;
+        [SerializeField] private float dashTimeScale = 0.05f;
 
         private void Awake()
         {
@@ -74,7 +75,9 @@ namespace Slapin_CharacterController
                             dashChargeTimeMin,
                             dashChargeTimeMax,
                             dashDistanceMin,
-                            dashDistanceMax);
+                            dashDistanceMax,
+                            dashCurveExponent,
+                            dashTimeScale);
         }
 
         void Start()
