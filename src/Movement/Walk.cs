@@ -14,9 +14,9 @@ namespace Slapin_CharacterController
         private float walkMaxSpeed;
 
         // Variables Statiques
-        private static float inertiaGroundFactor = 1f;
-        private static float inertiaAirFactor = 0.5f;
-        private static float airAdherence = 0.1f;
+        private static float inertiaFactor = 0.1f;
+        private static float inertiaFactorAir = 0.4f;
+        private static float airAdherence = 0.5f;
 
         // Variables accessibles
         public float WallJumpFactor = 1f;
@@ -70,6 +70,15 @@ namespace Slapin_CharacterController
             }
         }
 
+        private float GetInertiaFactor()
+        {
+            if (physic.state == Physics.State.InAir) {
+                return inertiaFactorAir;
+            } else {
+                return inertiaFactor;
+            }
+        }
+
         // Fonction qui calcule la vitesse
         private void Run(Vector2 vectorAxis, float acceleration, float maxSpeed)
         {
@@ -87,22 +96,15 @@ namespace Slapin_CharacterController
             float direction = Mathf.Sign(vectorAxis.x);
 
             // On calcule l'accélération en fonction de l'état du joueur
-            if (physic.state == Physics.State.OnGround) {
-                if (Mathf.Sign(physic.velocity.x) != direction) {
-                    acceleration *= inertiaGroundFactor * GetAderence();
-                } else {
-                    acceleration *= GetAderence();
-                }
+            if (Mathf.Sign(physic.velocity.x) != direction) {
+                acceleration *= GetInertiaFactor() * GetAderence();
             } else {
-                if (Mathf.Sign(physic.velocity.x) != direction) {
-                    acceleration *= inertiaAirFactor * GetAderence();
-                } else {
-                    acceleration *= GetAderence();
-                }
+                acceleration *= GetAderence();
             }
 
+
             // Calcul de l'accélération à ajouter en fonction de la direction et de l'accélération
-            float addVelocity = direction * acceleration * directionAmplitude;
+            float addVelocity = direction * acceleration * directionAmplitude * Time.deltaTime * 50f;
 
             // On calcule la nouvelle vitesse potentielle
             float currentVelocity = physic.velocity.x;

@@ -60,6 +60,14 @@ namespace Slapin_CharacterController
             ResetAirJumpCount();
             ResetWallJumpFactor();
 
+            if (physic.state != Physics.State.InAir) {
+                IsJumping = false;
+            } else {
+                if (IsJumping) {
+                    physic.MultiplyHorizontalVelocity(0.997f);
+                }
+            }
+
             if (input.CurrentJumpState == BInput.Down) {
                 if (physic.state == Physics.State.OnGround) {
                     JumpOnGround();
@@ -80,7 +88,10 @@ namespace Slapin_CharacterController
         private void JumpOnGround()
         {
             IsJumping = true;
-            physic.SetVerticalVelocity(jumpForce);
+            Vector2 velocity = physic.velocity;
+            velocity.y = jumpForce;
+            velocity.x = physic.velocity.x * 1.7f;
+            physic.SetVelocity(velocity);
         }
 
         private void StopJump()
