@@ -17,6 +17,7 @@ namespace Slapin_CharacterController
         private float dashDistanceMax;
         private float dashCurveExponent;
         private float dashTimeScale;
+        private float dashChargeMaxTimeLimit;
 
         // Variables internes
         private float dashing = 0f;
@@ -35,7 +36,8 @@ namespace Slapin_CharacterController
                     float dashDistanceMin,
                     float dashDistanceMax,
                     float dashCurveExponent,
-                    float dashTimeScale)
+                    float dashTimeScale,
+                    float dashChargeMaxTimeLimit)
         {
             this.physic = physic;
             this.input = input;
@@ -62,41 +64,21 @@ namespace Slapin_CharacterController
             }
         }
 
-        private Vector2 GetDashDirectionInput()
-        {
-            if (physic.state != Physics.State.InAir) {
-                Vector2 dashDirection = input.CurrentLookState;
-                foreach (Physics.CollisionData collision in physic.collisionBuffer.CollisionList)
-                {
-                    float dot = Vector2.Dot(dashDirection, collision.Normal);
-                    if (dot < 0)
-                    {
-                        dashDirection -= dot * collision.Normal;
-                    }
-                }
-                return dashDirection;
-            }
-            else {
-                return input.CurrentLookState;
-            }
-        }
-
 
 
         public void Update()
         {
-            if (dashing == 0f)
-            {
-                if (input.CurrentDashState == BInput.Down)
-                {
+            if (dashing == 0f) {
+                if (input.CurrentDashState == BInput.Down) {
                     isCharging = true;
                     chargingFactor = 0f;
                     Time.timeScale = dashTimeScale;
                 }
-                else if (isCharging)
-                {
-                    ChargingDash();
-                    if (input.CurrentDashState == BInput.Up) {
+                else if (isCharging) {
+                    if (input.CurrentDashState == BInput.Pressed) {
+                        ChargingDash();
+                    }
+                    else if (input.CurrentDashState == BInput.Up) {
                         Time.timeScale = 1f;
                         if (chargingFactor >= dashChargeTimeMin) {
                             dashing = dashDuration;
@@ -104,8 +86,7 @@ namespace Slapin_CharacterController
                     }
                 }
             }
-            else
-            {
+            else {
                 InDash();
             }
         }
@@ -114,11 +95,14 @@ namespace Slapin_CharacterController
         {
             chargingFactor = 0f;
             Time.timeScale = 1f;
+            isCharging = false;
+            dashing = 0f;
+            isDashing = false;
         }
 
         private void ChargingDash()
         {
-            dashDirection = GetDashDirectionInput();
+            dashDirection = input.CurrentLookState;
             dashDistance = Mathf.Lerp(dashDistanceMin, dashDistanceMax, chargingFactor - dashChargeTimeMin);
             // Si le temps est divisé par 0, on ne charge pas
             if (dashTimeScale != 0f) {
@@ -127,6 +111,11 @@ namespace Slapin_CharacterController
                 Debug.LogWarning("Dash time scale is 0");
             }
             chargingFactor = Mathf.Clamp(chargingFactor, 0f, dashChargeTimeMax);
+
+            // Si la charge dure trop longtemps, on arrête la charge
+            if (chargingFactor >= dashChargeMaxTimeLimit + dashChargeTimeMax) {
+                BreakCharge();
+            }
         }
 
         private void InDash()

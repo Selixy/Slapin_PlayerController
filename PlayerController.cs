@@ -8,9 +8,13 @@ namespace Slapin_CharacterController
     {
         private S_Input input;
         private Physic physic;
+        private Slapin_States states;
         private Walk walk;
         private Jump jump;
         private Dash dash;
+        
+        public Vector2 SpawnPosition;
+        public Vector2 velocity { get{ return physic.velocity; } }
 
         [Header("Movement Settings")]
         [SerializeField] private float walkAcceleration = 3f;
@@ -32,6 +36,7 @@ namespace Slapin_CharacterController
         [SerializeField] private float dashDuration = 10f;
         [SerializeField] private float dashChargeTimeMin = 0.1f;
         [SerializeField] private float dashChargeTimeMax = 0.4f;
+        [SerializeField] private float dashChargeMaxTimeLimit = 0.2f;
         [SerializeField] private float dashDistanceMin = 10f;
         [SerializeField] private float dashDistanceMax = 20f;
         [SerializeField] private float dashCurveExponent = 7f;
@@ -39,26 +44,26 @@ namespace Slapin_CharacterController
 
         private void Awake()
         {
-            // Création des instances
-            // instances de base
+            // Création des instances de base
             physic = new Physic(gameObject, 0.0001f);
             input = new S_Input(this, gameObject);
 
-            // instances de mouvement
+            SpawnPosition = transform.position;
+            states = gameObject.GetComponent<Slapin_States>();
+
+            // Instances de mouvement
             walk = new Walk(physic,
                             input,
-
                             walkAcceleration,
                             walkMaxSpeed,
                             sprintAcceleration,
                             sprintMaxSpeed);
 
-            // instances de saut
+            // Instances de saut
             jump = new Jump(physic,
                             input,
                             walk,
                             gameObject,
-
                             jumpForce,
                             airJumpForce,
                             airJumpDelay,
@@ -68,7 +73,7 @@ namespace Slapin_CharacterController
                             wallUpFactor,
                             stayJump);
 
-            // instances de dash
+            // Instances de dash
             dash = new Dash(physic,
                             input,
                             dashDuration,
@@ -77,25 +82,40 @@ namespace Slapin_CharacterController
                             dashDistanceMin,
                             dashDistanceMax,
                             dashCurveExponent,
-                            dashTimeScale);
+                            dashTimeScale,
+                            dashChargeMaxTimeLimit);
         }
 
-        void Start()
+        // Abonnement aux événements
+        void OnEnable()
         {
+            Slapin_States.OnDeath += OnDeath;
+        }
+
+        void OnDisable()
+        {
+            Slapin_States.OnDeath -= OnDeath;
         }
 
         void Update()
         {
-            // Run
-            walk.Update();
-            // Jump
-            jump.Update();
-            // Dash
-            dash.Update();
-
-            // Update
+            if (!states.isDead && !states.isStunned)
+            {
+                walk.Update();
+                jump.Update();
+                dash.Update();
+                input.Update();
+            }
             physic.Update();
-            input.Update();
+        }
+
+        void OnDeath(GameObject obj, bool isDead)
+        {
+            if (obj == this.gameObject)
+            {
+                transform.position = new Vector3(SpawnPosition.x, SpawnPosition.y, transform.position.z);
+                states.Resurrect(0);
+            }
         }
     }
 }

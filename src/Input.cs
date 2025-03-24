@@ -38,8 +38,8 @@ namespace Slapin_CharacterController
         {
             get
             {
-                Vector3 pos = Player.transform.position;
-                return new Vector2(pos.x, pos.y);
+                Vector3 screenPos = Camera.main.WorldToScreenPoint(Player.transform.position);
+                return new Vector2(screenPos.x, screenPos.y);
             }
         }
 
@@ -50,8 +50,8 @@ namespace Slapin_CharacterController
         {
             get
             {
-                Vector3 mouseWorldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                Vector2 lookVector = new Vector2(mouseWorldPosition.x, mouseWorldPosition.y) - PlayerPosition;
+                Vector2 mouseScreenPosition = Input.mousePosition;
+                Vector2 lookVector = mouseScreenPosition - PlayerPosition;
                 lookVector.Normalize();
                 return lookVector;
             }

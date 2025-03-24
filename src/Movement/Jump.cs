@@ -99,7 +99,7 @@ namespace Slapin_CharacterController
             float velocity = physic.velocity.y;
             if (velocity > 0f && IsJumping) {
                 physic.SetVerticalVelocity(velocity * 0.5f);
-                IsJumping = false;
+                //IsJumping = false;
             }
         }
 
